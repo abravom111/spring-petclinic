@@ -8,28 +8,19 @@ pipeline {
       }
     }
 
-    stage('Verificar archivos') {
-      steps {
-        sh 'ls -la'
-        sh 'cat pom.xml'
-      }
-    }
-
     stage('Maven Install') {
-      agent {
-        docker {
-          image 'maven:3.5.0'
-          args '-u root:root' // Opcional, para asegurar permisos
-        }
-      }
       steps {
-        sh 'mvn clean install'
+        script {
+          docker.image('maven:3.5.0').inside('-u root:root') {
+            sh 'mvn clean install'
+          }
+        }
       }
     }
 
     stage('Docker Build') {
       steps {
-        sh 'docker build -t grupo03/spring‑petclinic:latest .'
+        sh 'docker build -t grupo03/spring-petclinic:latest .'
       }
     }
   }
