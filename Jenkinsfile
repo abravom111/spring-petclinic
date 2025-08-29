@@ -2,9 +2,14 @@ pipeline {
     agent any
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Maven Install') {
             steps {
-                // Ejecuta Maven usando Docker manualmente
                 sh 'docker run --rm -v $PWD:/app -w /app maven:3.5.0 mvn clean install'
             }
         }
