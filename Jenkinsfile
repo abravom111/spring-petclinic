@@ -5,24 +5,21 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.5.0'
-                    args '-v $HOME/.m2:/root/.m2'  // Cache para Maven
+                    args '-v $HOME/.m2:/root/.m2 --user root'
                 }
             }
             steps {
                 sh 'mvn clean package -DskipTests'
-                // Guardar el artefacto para el siguiente stage
-                stash name: 'target-files', includes: 'target/*.jar'
             }
         }
         stage('Docker Build') {
             agent any
             steps {
-                // Recuperar los archivos compilados
-                unstash 'target-files'
-                
                 script {
-                    // Verificar que el JAR existe antes de construir
+                    // Verificar que el archivo JAR existe
                     sh 'ls -la target/'
+                    
+                    // Construir imagen Docker
                     docker.build("grupo03/spring-petclinic:latest")
                 }
             }
@@ -31,8 +28,16 @@ pipeline {
             agent any
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        docker.image("grupo03/spring-petclinic:latest").push()
+                    // Configurar credenciales en Jenkins primero
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                            docker login -u $DOCKER_USER -p $DOCKER_PASS
+                            docker push grupo03/spring-petclinic:latest
+                        """
                     }
                 }
             }
