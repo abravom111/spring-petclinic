@@ -1,30 +1,36 @@
 pipeline {
-    agent any
+  agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Verificar archivos') {
-            steps {
-                sh 'ls -la'
-                sh 'cat pom.xml || echo "pom.xml no encontrado"'
-            }
-        }
-
-        stage('Maven Install') {
-            steps {
-                sh 'docker run --rm -v $PWD:/app -w /app maven:3.5.0 mvn clean install'
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                sh 'docker build -t grupo03/spring-petclinic:latest .'
-            }
-        }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
     }
+
+    stage('Verificar archivos') {
+      steps {
+        sh 'ls -la'
+        sh 'cat pom.xml'
+      }
+    }
+
+    stage('Maven Install') {
+      agent {
+        docker {
+          image 'maven:3.5.0'
+          args '-u root:root' // Opcional, para asegurar permisos
+        }
+      }
+      steps {
+        sh 'mvn clean install'
+      }
+    }
+
+    stage('Docker Build') {
+      steps {
+        sh 'docker build -t grupo03/spring‑petclinic:latest .'
+      }
+    }
+  }
 }
