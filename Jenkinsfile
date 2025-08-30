@@ -1,26 +1,29 @@
 pipeline {
-    agent none
+    // This defines the pipeline itself
+    agent none 
+
     stages {
+        // This is the "build" stage
         stage('Maven Install') {
+            // Specifies that this stage will run inside a Maven Docker container
             agent {
                 docker {
                     image 'maven:3.5.0'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
+                // Executes the 'mvn clean install' command
                 sh 'mvn clean install'
             }
         }
+
+        // This is the "packaging" stage
         stage('Docker Build') {
-            agent {
-                docker {
-                    image 'docker:20.10.7'   // Imagen oficial de Docker CLI
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
+            // The 'agent any' means this stage can run on any available Jenkins agent
+            agent any
             steps {
-                sh 'docker build -t grupo03/spring-petclinic:latest .'
+                // Builds a Docker image using the Dockerfile in the current directory
+                sh 'docker build -t grupoxx/spring-petclinic:latest .'
             }
         }
     }
